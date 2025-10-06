@@ -17,9 +17,20 @@ app.add_middleware(
 )
 
 # Load the dataset once when the app starts
-# The data file should be in the same directory as this script
-DATA_FILE = Path(__file__).parent / "q-vercel-latency.json"
-df = pd.read_json(DATA_FILE)
+# Prefer file next to project root (..\q-vercel-latency.json); fallback to same dir
+ROOT_DIR = Path(__file__).resolve().parent.parent
+DATA_FILE_CANDIDATES = [
+    ROOT_DIR / "q-vercel-latency.json",
+    Path(__file__).parent / "q-vercel-latency.json",
+]
+
+for candidate in DATA_FILE_CANDIDATES:
+    if candidate.exists():
+        df = pd.read_json(candidate)
+        break
+else:
+    # If file isn't found, create an empty DataFrame with expected columns
+    df = pd.DataFrame(columns=["region", "latency_ms", "uptime_pct"])
 
 
 @app.get("/")
